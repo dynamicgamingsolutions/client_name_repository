@@ -26,9 +26,10 @@ ALTER TABLE [dbo].[sales_order] ADD  DEFAULT (getdate()) FOR [insert_date]
 GO
 ALTER TABLE [dbo].[sales_order] ADD  DEFAULT (getdate()) FOR [update_date]
 GO
-SET ANSI_NULLS ON
-GO
-SET QUOTED_IDENTIFIER ON
+
+
+	
+USE clients
 GO
 CREATE TRIGGER [dbo].[trg_insert_sales_order]
 ON [dbo].[sales_order]
@@ -58,7 +59,7 @@ BEGIN
     FROM sales_order so
     INNER JOIN inserted i ON so.index_key = i.index_key
     LEFT JOIN analytics.dbo.casino_new_06_12_2025 ca ON ca.casino_name = i.casino_name
-    LEFT JOIN analytics.dbo.email emp ON ca.sales = emp.Name;
+    LEFT JOIN employees.dbo.employee_roles emp ON ca.sales = emp.name;
 
     -- Log the initial values into activity_logs
     INSERT INTO logs.dbo.activity_logs (log_id, change_log, update_by, table_name)
@@ -74,6 +75,9 @@ BEGIN
     FROM inserted i;
 END
 GO
+
+	
+	
 ALTER TABLE [dbo].[sales_order] ENABLE TRIGGER [trg_insert_sales_order]
 GO
 SET ANSI_NULLS ON
