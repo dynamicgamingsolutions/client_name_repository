@@ -99,13 +99,24 @@ ON [dbo].[casinos]
 AFTER UPDATE
 AS
 BEGIN
+    SET NOCOUNT ON;
+
     -- Step 1: Update the `update_date` for all updated rows
     UPDATE ca
     SET ca.update_date = GETDATE()
     FROM casinos ca
     INNER JOIN inserted i ON ca.uuid = i.uuid;
 
-    -- Step 2: Log the changes into `activity_logs`
+    -- Step 2: Format the phone number for updated rows
+    UPDATE ca
+    SET ca.phone = '(' + SUBSTRING(REPLACE(REPLACE(REPLACE(i.phone, '-', ''), ' ', ''), '(', ''), 1, 3) + ') ' +
+                    SUBSTRING(REPLACE(REPLACE(REPLACE(i.phone, '-', ''), ' ', ''), '(', ''), 4, 3) + '-' +
+                    SUBSTRING(REPLACE(REPLACE(REPLACE(i.phone, '-', ''), ' ', ''), '(', ''), 7, 4)
+    FROM casinos ca
+    INNER JOIN inserted i ON ca.uuid = i.uuid
+    WHERE i.phone IS NOT NULL;
+
+    -- Step 3: Log the changes into `activity_logs`
     INSERT INTO logs.dbo.activity_logs (log_id, change_log, update_by, table_name, timestamp)
     SELECT 
         COALESCE(i.uuid, NEWID()) AS log_id, -- Ensure log_id is never NULL
@@ -114,14 +125,14 @@ BEGIN
                 (SELECT d.* FOR JSON PATH, WITHOUT_ARRAY_WRAPPER) AS before_values,
                 (SELECT i.* FOR JSON PATH, WITHOUT_ARRAY_WRAPPER) AS after_values
             FOR JSON PATH, WITHOUT_ARRAY_WRAPPER
-        )) AS change_log, -- Log before and after values as JcaN
+        )) AS change_log, -- Log before and after values as JSON
         i.update_by AS update_by, -- Pass through the updated_by column
         'casinos' AS table_name, -- Hardcode the table name
         GETDATE() AS timestamp -- Add the current timestamp
     FROM inserted i
     INNER JOIN deleted d ON i.uuid = d.uuid; -- Match updated rows
 
-    -- Step 3: Update the `change_log` in `sales_order` with the most recent log reference
+    -- Step 4: Update the `change_log` in `casinos` with the most recent log reference
     UPDATE ca
     SET ca.change_log = 'Updated on ' + CONVERT(NVARCHAR, GETDATE(), 120) + ' Log key: (' + al.reference_key + ')'
     FROM casinos ca
@@ -129,22 +140,5 @@ BEGIN
     INNER JOIN (
         SELECT log_id, reference_key, ROW_NUMBER() OVER (PARTITION BY log_id ORDER BY timestamp DESC) AS row_num
         FROM logs.dbo.activity_logs
-    ) al ON al.log_id = i.uuid AND al.row_num = 1; -- Use the most recent log encay
-END
-GO
-
-USE clients
-GO
-CREATE TRIGGER [dbo].[trg_format_phone]
-ON [dbo].[casinos]
-AFTER INSERT, UPDATE
-AS
-BEGIN
-    SET NOCOUNT ON;
-
-    UPDATE [dbo].[casinos]
-    SET [phone] = '(' + SUBSTRING(REPLACE(REPLACE(REPLACE([phone], '-', ''), ' ', ''), '(', ''), 1, 3) + ') ' +
-                    SUBSTRING(REPLACE(REPLACE(REPLACE([phone], '-', ''), ' ', ''), '(', ''), 4, 3) + '-' +
-                    SUBSTRING(REPLACE(REPLACE(REPLACE([phone], '-', ''), ' ', ''), '(', ''), 7, 4)
-    WHERE [uuid] IN (SELECT [uuid] FROM inserted);
-END
+    ) al ON al.log_id = i.uuid AND al.row_num = 1; -- Use the most recent log entry
+END;
