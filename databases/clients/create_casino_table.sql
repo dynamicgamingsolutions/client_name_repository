@@ -33,6 +33,8 @@ CREATE TABLE casinos (
     latitude FLOAT NULL,
     phone NVARCHAR(20) NULL,
     sales NVARCHAR(50) NULL,
+    available_vendors NVARCHAR(MAX) NULL,
+    goal INT NULL,
     route_week INT NULL,
     last_report DATE NULL,
     general_manager_name NVARCHAR(75) NULL,
@@ -44,9 +46,15 @@ CREATE TABLE casinos (
     casino_referal NVARCHAR(50) NULL,
     dgs_referal NVARCHAR(50) NULL,
     licensed BINARY NOT NULL DEFAULT 0,
-    signed_master_agreement NVARCHAR(50) NULL,
+    signed_master_agreement BINARY NOT NULL DEFAULT 0,
     executed_on DATE NULL,
     expiration DATE NULL,
+    agreement_type NVARCHAR(50) NULL,
+    split DECIMAL(2,2) NULL,
+    cap INT NULL,
+    fee INT NULL,
+    loss_passed BINARY NOT NULL DEFAULT 0,
+    minimum INT NULL,
     compliance_id NVARCHAR(25) NULL
 )
 
