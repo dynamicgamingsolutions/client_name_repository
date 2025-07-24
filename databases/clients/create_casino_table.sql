@@ -45,15 +45,15 @@ CREATE TABLE casinos (
     accounting_email NVARCHAR(75) NULL,
     casino_referal NVARCHAR(50) NULL,
     dgs_referal NVARCHAR(50) NULL,
-    licensed BINARY NOT NULL DEFAULT 0,
-    signed_master_agreement BINARY NOT NULL DEFAULT 0,
+    licensed BIT NOT NULL DEFAULT 0,
+    signed_master_agreement BIT NOT NULL DEFAULT 0,
     executed_on DATE NULL,
     expiration DATE NULL,
     agreement_type NVARCHAR(50) NULL,
     split DECIMAL(2,2) NULL,
     cap INT NULL,
     fee INT NULL,
-    loss_passed BINARY NOT NULL DEFAULT 0,
+    loss_passed BIT NOT NULL DEFAULT 0,
     minimum INT NULL,
     compliance_id NVARCHAR(25) NULL
 )
