@@ -9,7 +9,7 @@ CREATE TABLE notes(
     update_date DATETIME NULL DEFAULT GETDATE(),
     update_by VARCHAR(50) NULL,
     change_log VARCHAR(255) NULL,
-    casino_id NVARCHAR(25) NOT NULL,
+    casino_id NVARCHAR(25) NULL,
     note NVARCHAR(MAX) NULL
 )
 
